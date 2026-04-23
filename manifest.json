@@ -2,7 +2,7 @@
   "name": "Dominus Admin - Mando Central",
   "short_name": "DOMI Admin",
   "description": "Panel de Control Estratégico Dominus",
-  "start_url": "./admin.html", 
+  "start_url": "./index.html", 
   "display": "standalone",
   "background_color": "#000000",
   "theme_color": "#ff3333",

@@ -2,7 +2,7 @@ const CACHE_NAME = 'DOMI-ADMIN-1.0.0';
 
 const ASSETS = [
   './', 
-  'admin.html',
+  'index.html',
   'manifest.json',
   'DA-STYLES/STYLES.css',
   
