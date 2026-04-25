@@ -1,4 +1,4 @@
-const CACHE_NAME = 'DOMI-ADMIN-1.0.0'; 
+const CACHE_NAME = 'DOMI-ADMIN-2.0.0'; 
 
 const ASSETS = [
   './', 
