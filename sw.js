@@ -1,39 +1,33 @@
 const CACHE_NAME = 'DOMI-ADMIN-2.1.1'; 
 
+// 🚩 Solo archivos LOCALES en el arranque para asegurar la instalación
 const ASSETS = [
   './', 
   'index.html',
   'manifest.json',
   'DA-STYLES/STYLES.css',
-  
-  // --- LIBRERÍAS ---
-  'https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js',
-  'https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js',
-
-  // --- TUS SCRIPTS (DA-) ---
   'DA-JS/DA-Cloud.js',
   'DA-JS/DA-Core.js',
-
-  // --- RECURSOS VISUALES Y AUDIO ---
   'DA-IMG/icon-192.png',
   'DA-IMG/icon-512.png',
-  'DA-AUDIO/notificacion.mp3' // Si tienes alguno para alertas
+  'DA-AUDIO/notificacion.mp3'
 ];
 
-// 1. INSTALACIÓN (Tu método compatible)
+// 1. INSTALACIÓN
 self.addEventListener('install', e => {
   e.waitUntil(
     caches.open(CACHE_NAME).then(cache => {
       console.log('DOMI Admin: Sincronizando Mando Central...');
+      // Usamos map para que si uno falla, no mate a los demás
       return Promise.allSettled(
-        ASSETS.map(url => cache.add(url).catch(err => console.error(`Fallo en: ${url}`, err)))
+        ASSETS.map(url => cache.add(url).catch(err => console.warn(`Pendiente: ${url}`)))
       );
     })
   );
   self.skipWaiting();
 });
 
-// 2. ACTIVACIÓN
+// 2. ACTIVACIÓN (Limpieza de memorias antiguas)
 self.addEventListener('activate', e => {
   e.waitUntil(
     caches.keys().then(keys => {
@@ -42,16 +36,30 @@ self.addEventListener('activate', e => {
       );
     })
   );
+  // 🚩 CRÍTICO: Toma el control de la app inmediatamente
+  self.clients.claim();
 });
 
-// 3. FETCH (Modo Offline para el Panel)
+// 3. FETCH (Estrategia: Cache First, then Network)
 self.addEventListener('fetch', e => {
+  // Solo manejamos peticiones GET (Firebase usa otros métodos que no se cachean)
+  if (e.request.method !== 'GET') return;
+
   e.respondWith(
     caches.match(e.request).then(response => {
+      // Si está en caché, lo devolvemos
       if (response) return response;
-      return fetch(e.request).catch(() => {
-        console.log("☁️ DOMI Admin: Modo lectura offline.");
-        return new Response(null, { status: 404, statusText: 'Offline' });
+
+      // Si no, lo buscamos en la red
+      return fetch(e.request).then(networkResponse => {
+        // Opcional: Podrías guardar dinámicamente nuevos recursos aquí
+        return networkResponse;
+      }).catch(() => {
+        // Si no hay red ni caché, y es una página, podrías devolver index.html
+        if (e.request.mode === 'navigate') {
+          return caches.match('index.html');
+        }
+        console.log("☁️ DOMI Admin: Recurso no disponible offline.");
       });
     })
   );
